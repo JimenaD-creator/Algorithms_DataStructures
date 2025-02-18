@@ -17,7 +17,6 @@ This repository is a collection of implementations of algorithms and data struct
 - Insertion Sort
 - Merge Sort
 - Quick Sort
-- Heap Sort
 
 ### Search algorithms (Searching)
 -LinearSearch
@@ -30,9 +29,9 @@ This repository is a collection of implementations of algorithms and data struct
 - Linked Lists
 -Stacks
 -Queues
-- Hash Tables
 - Trees (Binary Trees, AVL Trees, Red-Black Trees)
 - Graphs (Adjacency List, Adjacency Matrix)
+- Dijkstra Algorithm
 
 1. **Clone the repository**:
 ```bash
