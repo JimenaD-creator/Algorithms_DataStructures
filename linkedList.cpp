@@ -1,0 +1,245 @@
+#include <SFML/Graphics.hpp>
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+struct Node {
+    int data;
+    Node* next;
+};
+
+class LinkedList {
+private:
+    Node* head;
+
+public:
+    LinkedList() : head(nullptr) {}
+
+    void addNode(int value) {
+        // Complejidad: O(n), ya que tenemos que recorrer toda la lista para añadir el nodo al final
+        Node* newNode = new Node();
+        newNode->data = value;
+        newNode->next = nullptr;
+
+        if (head == nullptr) {
+            head = newNode;
+        } else {
+            Node* temp = head;
+            while (temp->next != nullptr) {
+                temp = temp->next;
+            }
+            temp->next = newNode;
+        }
+    }
+
+    void removeNode(int value, string& resultMessage) {
+        // Complejidad: O(n), ya que necesitamos recorrer la lista hasta encontrar el nodo
+        if (head == nullptr) {
+            resultMessage = "La lista está vacía.";
+            return;
+        }
+
+        Node* temp = head;
+        Node* prev = nullptr;
+
+        while (temp != nullptr && temp->data != value) {
+            prev = temp;
+            temp = temp->next;
+        }
+
+        if (temp == nullptr) {
+            resultMessage = "Nodo con valor " + to_string(value) + " no encontrado.";
+            return;
+        }
+
+        if (prev == nullptr) {
+            head = temp->next;
+        } else {
+            prev->next = temp->next;
+        }
+
+        delete temp;
+        resultMessage = "Nodo con valor " + to_string(value) + " eliminado.";
+    }
+
+    Node* searchNode(int value) {
+        // Complejidad: O(n), ya que necesitamos recorrer toda la lista
+        Node* temp = head;
+        while (temp != nullptr) {
+            if (temp->data == value) {
+                return temp;
+            }
+            temp = temp->next;
+        }
+        return nullptr;
+    }
+
+    void showList(sf::RenderWindow& window, sf::Font& font) {
+        Node* temp = head;
+        int x = 50, y = 250; // Comenzar la lista más abajo
+
+        while (temp != nullptr) {
+            // Dibujar nodo
+            sf::CircleShape node(30);
+            node.setFillColor(sf::Color::Cyan);
+            node.setPosition(x, y);
+            window.draw(node);
+
+            // Mostrar valor del nodo
+            sf::Text text;
+            text.setFont(font);
+            text.setString(to_string(temp->data));
+            text.setCharacterSize(24);
+            text.setFillColor(sf::Color::Black);
+
+            // Centrar texto en el nodo
+            sf::FloatRect textRect = text.getLocalBounds();
+            text.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
+            text.setPosition(x + 30, y + 30); // 30 es el radio del círculo, por lo que lo centramos en el medio
+            window.draw(text);
+
+            // Dibujar flecha si hay un nodo siguiente
+            if (temp->next != nullptr) {
+                // Línea de conexión
+                sf::Vertex line[] = {
+                    sf::Vertex(sf::Vector2f(x + 60, y + 30), sf::Color::White), // Punto final del nodo actual
+                    sf::Vertex(sf::Vector2f(x + 130, y + 30), sf::Color::White) // Punto inicial del siguiente nodo
+                };
+                window.draw(line, 2, sf::Lines);
+
+                // Dibujar la punta de la flecha
+                sf::ConvexShape arrow;
+                arrow.setPointCount(3);
+                arrow.setFillColor(sf::Color::White);
+                arrow.setPoint(0, sf::Vector2f(x + 120, y + 25)); // Punto izquierdo
+                arrow.setPoint(1, sf::Vector2f(x + 130, y + 30)); // Punta
+                arrow.setPoint(2, sf::Vector2f(x + 120, y + 35)); // Punto derecho
+                window.draw(arrow);
+            }
+
+            temp = temp->next;
+            x += 170; // Ajustar posición para el siguiente nodo
+        }
+    }
+
+    string getComplexities() {
+        // Mostrar las complejidades de los métodos
+        return "Complejidad de los metodos:\n"
+               "Agregar nodo: O(n)\n"
+               "Eliminar nodo: O(n)\n"
+               "Buscar nodo: O(n)";
+    }
+};
+
+void displayUserInput(sf::RenderWindow& window, sf::Font& font, const string& userInput, const string& operationMessage) {
+    sf::Text inputText;
+    inputText.setFont(font);
+    inputText.setString(operationMessage + " " + userInput);
+    inputText.setCharacterSize(24);
+    inputText.setFillColor(sf::Color::Yellow);
+    inputText.setPosition(50, 50);
+    window.draw(inputText);
+}
+
+void displayComplexities(sf::RenderWindow& window, sf::Font& font, const string& complexities) {
+    sf::Text complexityText;
+    complexityText.setFont(font);
+    complexityText.setString(complexities);
+    complexityText.setCharacterSize(18);
+    complexityText.setFillColor(sf::Color::White);
+    complexityText.setPosition(50, 400); // Ubicar las complejidades debajo de la lista
+    window.draw(complexityText);
+}
+
+int main() {
+    sf::RenderWindow window(sf::VideoMode(1000, 600), "Lista Enlazada");
+    sf::Font font;
+    if (!font.loadFromFile("PlaywriteGBS-VariableFont_wght.ttf")) {
+        cout << "No se pudo cargar la fuente." << endl;
+        return -1;
+    }
+
+    LinkedList linkedlist;
+    string userInput = "";
+    string operationMessage = "Presione A para agregar, D para eliminar, S para buscar: ";
+    string resultMessage = "";
+    bool isAdding = false, isDeleting = false, isSearching = false;
+
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
+
+            if (event.type == sf::Event::TextEntered) {
+                if (event.text.unicode < 128) {
+                    char enteredChar = static_cast<char>(event.text.unicode);
+                    if (isdigit(enteredChar)) {
+                        userInput += enteredChar;
+                    } else if (enteredChar == '\b' && !userInput.empty()) {
+                        userInput.pop_back();
+                    }
+                }
+            }
+
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Enter && !userInput.empty()) {
+                    int value = stoi(userInput);
+                    if (isAdding) {
+                        linkedlist.addNode(value);
+                        resultMessage = "Nodo con valor " + userInput + " agregado.";
+                    } else if (isDeleting) {
+                        linkedlist.removeNode(value, resultMessage);
+                    } else if (isSearching) {
+                        Node* foundNode = linkedlist.searchNode(value);
+                        resultMessage = foundNode ? "Nodo con valor " + userInput + " encontrado."
+                                                  : "Nodo con valor " + userInput + " no encontrado.";
+                    }
+                    isAdding = isDeleting = isSearching = false;
+                    operationMessage = "Presione A para agregar, D para eliminar, S para buscar: ";
+                    userInput.clear();
+                }
+
+                if (event.key.code == sf::Keyboard::A) {
+                    isAdding = true;
+                    isDeleting = isSearching = false;
+                    operationMessage = "Ingrese un numero para agregar: ";
+                } else if (event.key.code == sf::Keyboard::D) {
+                    isDeleting = true;
+                    isAdding = isSearching = false;
+                    operationMessage = "Ingrese un numero para eliminar: ";
+                    
+                } else if (event.key.code == sf::Keyboard::S) {
+                    isSearching = true;
+                    isAdding = isDeleting = false;
+                    operationMessage = "Ingrese un numero para buscar: ";
+                    
+                }
+            }
+        }
+
+        window.clear(sf::Color::Black);
+
+        // Mostrar el mensaje primero, luego la lista debajo
+        sf::Text resultText;
+        resultText.setFont(font);
+        resultText.setString(resultMessage);
+        resultText.setCharacterSize(24);
+        resultText.setFillColor(sf::Color::Green);
+        resultText.setPosition(50, 150);
+        window.draw(resultText);
+
+        // Mostrar la lista enlazada debajo del mensaje
+        linkedlist.showList(window, font);
+
+        displayUserInput(window, font, userInput, operationMessage);
+        displayComplexities(window, font, linkedlist.getComplexities()); // Mostrar complejidades debajo de la lista
+
+        window.display();
+    }
+
+    return 0;
+}
+
+
